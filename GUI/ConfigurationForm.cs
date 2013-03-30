@@ -79,6 +79,9 @@ namespace Singular.GUI
                 case WoWClass.Druid:
                     toSelect = main.Druid;
                     break;
+                case WoWClass.Monk:
+                    toSelect = main.Monk;
+                    break;
                 default:
                     break;
             }

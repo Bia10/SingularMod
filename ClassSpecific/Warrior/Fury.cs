@@ -63,7 +63,7 @@ namespace Singular.ClassSpecific.Warrior
 				//Handle AOE rotation when more than 1 target nearby within 8 yard
                 new Decorator
 				(
-                    ret => Unit.NearbyUnfriendlyUnits.Count() > 1 && SingularSettings.Instance.Warrior.UseWarriorAOE,
+                    ret => Unit.NearbyUnfriendlyUnits.Count(u => u.IsWithinMeleeRange) > 1 && SingularSettings.Instance.Warrior.UseWarriorAOE,
 					//ret => Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8 && !u.IsPlayer) >= 2,
                     new PrioritySelector
 					(

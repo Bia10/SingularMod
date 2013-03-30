@@ -13,6 +13,8 @@ using Rest = Singular.Helpers.Rest;
 using Singular.Settings;
 using Styx.WoWInternals;
 
+//Storm, Earth, and Fire (137639)
+
 namespace Singular.ClassSpecific.Monk
 {
     public class Windwalker
@@ -48,7 +50,7 @@ namespace Singular.ClassSpecific.Monk
                                 && (!Me.HasAura("Tiger Power") || Me.GetAuraTimeLeft("Tiger Power", true).TotalSeconds < 4) || Me.HasAura("Combo Breaker: Tiger Palm")), 
 
                         new Decorator
-                            ( ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count( u => u.Distance <= 8) >= 4,
+                            ( ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count( u => u.Distance <= 8) >= 4 && SingularSettings.Instance.Monk.UseAOE,
                             new PrioritySelector
                                 (
                                 Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
@@ -118,7 +120,7 @@ namespace Singular.ClassSpecific.Monk
                                 && (!Me.HasAura("Tiger Power") || Me.GetAuraTimeLeft("Tiger Power", true).TotalSeconds < 4) || Me.HasAura("Combo Breaker: Tiger Palm")), 
 
                         new Decorator
-                            ( ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count( u => u.Distance <= 8) >= 4,
+                            (ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= 4 && SingularSettings.Instance.Monk.UseAOE,
                             new PrioritySelector
                                 (
                                 Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
@@ -187,17 +189,6 @@ namespace Singular.ClassSpecific.Monk
                             ret => Me.CurrentChi > 0
                                 && (!Me.HasAura("Tiger Power") || Me.GetAuraTimeLeft("Tiger Power", true).TotalSeconds < 4) || Me.HasAura("Combo Breaker: Tiger Palm")),
 
-                        new Decorator
-                            (ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= 6,
-                            new PrioritySelector
-                                (
-                                Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
-                                Spell.Cast("Expel Harm", ret => Me.CurrentEnergy >= 40 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
-                                Spell.Cast("Fists of Fury",
-                                    ret => Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && !Me.IsMoving && Me.HasAura("Tiger Power") && Me.CurrentChi >= 3)
-                                //Spell.Cast("Spinning Crane Kick", ret => Me.CurrentEnergy >= 40)
-                                )
-                            ),
 
                         Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
 
