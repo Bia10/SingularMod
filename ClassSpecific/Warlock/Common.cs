@@ -43,13 +43,15 @@ namespace Singular.ClassSpecific.Warlock
                 );
         }
         [Behavior(BehaviorType.PreCombatBuffs, WoWClass.Warlock)]
+
         public static Composite CreateWarlockPreCombatBuffs()
         {
             return new PrioritySelector(
-                Spell.WaitForCast(true),
+                Spell.WaitForCast(true)
                 //Spell.BuffSelf("Create Healthstone", ret => !HaveHealthStone),
                 //Spell.BuffSelf("Soulstone", ret => !StyxWoW.Me.HasAura("Soulstone")),
                 //Spell.Buff("Dark Intent", ret => !StyxWoW.Me.HasAura("Dark Intent")),
+                /*
                 new Decorator(ret => !StyxWoW.Me.GotAlivePet,
                 new Switch<WoWSpec>(ctx => StyxWoW.Me.Specialization,
                                             new SwitchArgument<WoWSpec>(WoWSpec.None, 
@@ -77,7 +79,7 @@ namespace Singular.ClassSpecific.Warlock
                                                 new Decorator(ret => !SpellManager.HasSpell("Summon Felhunter"),
                                                     new Action(ret => PetManager.CallPet("Voidwalker")))))
                                             ))
-                                        
+                               */         
                 //Spell.BuffSelf("Health Funnel", ret => StyxWoW.Me.GotAlivePet && PetManager.PetTimer.IsFinished && StyxWoW.Me.Pet.HealthPercent < 60 && StyxWoW.Me.HealthPercent > 40)
                 );
         }
