@@ -99,7 +99,7 @@ namespace Singular.ClassSpecific.Monk
                                 Item.UseEquippedTrinket(TrinketUsage.CrowdControlled)
                             ),
                         Spell.Cast("Nimble Brew", ret => Me.IsCrowdControlled()),
-                        //Spell.Cast("Paralysis", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.Distance.Between(8, 20) && Me.IsFacing(u) && u != Me.CurrentTarget)),
+                        Spell.Cast("Paralysis", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.Distance.Between(8, 20) && Me.IsFacing(u) && u != Me.CurrentTarget)),
                         Spell.Cast("Quaking Palm", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.IsWithinMeleeRange && Me.IsFacing(u) && !u.HasAura("Paralysis") && u != Me.CurrentTarget)),
                         Spell.Cast("Spear Hand Strike", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.IsWithinMeleeRange && Me.IsFacing(u) && u.IsCastingHealingSpell)),
                         Spell.Cast("Invoke Xuen, the White Tiger", ret => Me.CurrentTarget.IsPlayer),

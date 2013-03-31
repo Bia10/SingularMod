@@ -50,11 +50,11 @@ namespace Singular.ClassSpecific.Warlock
                         Spell.Cast("Fire and Brimstone", ret => CurrentBurningEmbers >= 1)
                         //Spell.CastOnGround(104232, ret => Me.CurrentTarget.Location, ret => !Me.CurrentTarget.HasAura("Rain of Fire"))
                     ),
-                Spell.Cast("Havoc", ret => Unit.UnfriendlyUnitsNearTarget(8f).FirstOrDefault(u => u.Guid != Me.CurrentTarget.Guid && CurrentBurningEmbers > 1)),
-                Spell.CastOnGround(104232, ret => Me.CurrentTarget.Location, ret => !Me.CurrentTarget.HasAura("Rain of Fire") && SingularSettings.Instance.Warlock.UserRoF),
-                Spell.PreventDoubleCast("Conflagrate", 0.5, ret => BackdraftStacks < 1),
+                Spell.Cast("Havoc", ret => Unit.UnfriendlyUnitsNearTarget(8f).FirstOrDefault(u => u.Guid != Me.CurrentTarget.Guid && CurrentBurningEmbers > 1.5)),
                 Spell.PreventDoubleCast("Chaos Bolt", 0.5, ret => CurrentBurningEmbers > 1 && BackdraftStacks < 3),
-                Spell.PreventDoubleCast("Incinerate", 0.5, ret => true),
+                Spell.CastOnGround(104232, ret => Me.CurrentTarget.Location, ret => !Me.CurrentTarget.HasAura("Rain of Fire") && SingularSettings.Instance.Warlock.UserRoF),
+                Spell.PreventDoubleCast("Conflagrate", 0.5, ret => BackdraftStacks < 1),          
+                Spell.PreventDoubleCast("Incinerate", 0.5, ret => !Me.HasAura("Havoc", 3)),
                 Spell.Cast("Shadowburn", ret => Me.CurrentTarget.HealthPercent < 20),
                 
                 Movement.CreateMoveToTargetBehavior(true, 35f)
