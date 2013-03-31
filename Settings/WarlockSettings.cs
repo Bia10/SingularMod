@@ -57,6 +57,12 @@ namespace Singular.Settings
         [Description("Enable/Disable Warlock's AOE.")]
         public bool UseAOE { get; set; }
 
+        [Setting]
+        [DefaultValue(true)]
+        [Category("General")]
+        [DisplayName("Use Rain of Fire")]
+        [Description("Enable/Disable Warlock's Rain of Fire on Single target.")]
+        public bool UserRoF { get; set; }
 
 #region Setting Helpers
 

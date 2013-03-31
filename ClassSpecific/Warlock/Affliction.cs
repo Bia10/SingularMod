@@ -46,7 +46,7 @@ namespace Singular.ClassSpecific.Warlock
                 //Movement.CreateMoveToLosBehavior(),
                 //Movement.CreateFaceTargetBehavior(),
                 Spell.WaitForCast(true),
-                Spell.PreventDoubleCast(_Doublecast),
+                //Spell.PreventDoubleCast(_Doublecast),
                 Helpers.Common.CreateAutoAttack(true),
                 Helpers.Common.CreateInterruptSpellCast(ret => StyxWoW.Me.CurrentTarget),
 

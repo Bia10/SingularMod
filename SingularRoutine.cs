@@ -92,7 +92,7 @@ namespace Singular
 
             // Double cast shit
             Spell.DoubleCastPreventionDict.RemoveAll(t => DateTime.UtcNow.Subtract(t).TotalMilliseconds >= 2500);
-
+            Spell.PulseDoubleCastEntries();
             //Only pulse for classes with pets
             switch (StyxWoW.Me.Class)
             {

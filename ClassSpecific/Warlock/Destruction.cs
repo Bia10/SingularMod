@@ -4,7 +4,7 @@ using System.Linq;
 using Singular.Dynamics;
 using Singular.Helpers;
 using Singular.Managers;
-
+using Singular.Settings;
 using Styx;
 
 using Styx.CommonBot;
@@ -17,8 +17,7 @@ namespace Singular.ClassSpecific.Warlock
 {
     public class Destruction
     {
-
-
+        private static LocalPlayer Me { get { return StyxWoW.Me; } }
         #region Normal Rotation
 
         [Behavior(BehaviorType.Pull, WoWClass.Warlock, WoWSpec.WarlockDestruction, WoWContext.All)]
@@ -44,18 +43,20 @@ namespace Singular.ClassSpecific.Warlock
                 Movement.CreateFaceTargetBehavior(),
                 Spell.WaitForCast(true),
                 //Helpers.Common.CreateAutoAttack(true),
-                Helpers.Common.CreateInterruptSpellCast(ret => StyxWoW.Me.CurrentTarget),
-                //new Decorator(ret => Settings.SingularSettings.Instance.Warlock.UseAOE && Unit.UnfriendlyUnitsNearTarget(8f).Count() >= 2, DotCleave()),
-                new Decorator(ret => Settings.SingularSettings.Instance.Warlock.UseAOE && Unit.UnfriendlyUnitsNearTarget(8f).Count() >= 5, BigAOEGroup()),
-                Spell.Cast("Dark Soul: Instability", ret => StyxWoW.Me.CurrentTarget.IsBoss),
-                Spell.Cast("Immolate", ret => !StyxWoW.Me.CurrentTarget.HasAura("Immolate") && !NeedDelayCast(Immolate)),
-                Spell.CastOnGround("Rain of Fire", ret => StyxWoW.Me.CurrentTarget.Location),
-                Spell.Cast("Conflagrate", ret => BackdraftStacks < 1 && StyxWoW.Me.GetCurrentPower(WoWPowerType.BurningEmbers) < Convert.ToInt32(1) * 10),
-                Spell.Cast("Chaos Bolt",ret => BackdraftStacks < 3 || StyxWoW.Me.HasAura("Havoc")),
-
-                Spell.Cast("Incinerate", ret => BackdraftStacks >= 1 && StyxWoW.Me.GetCurrentPower(WoWPowerType.BurningEmbers) < Convert.ToInt32(1) * 10 || !SpellManager.CanCast("Chaos Bolt") && !StyxWoW.Me.HasAura("Havoc") && StyxWoW.Me.GetCurrentPower(WoWPowerType.BurningEmbers) < Convert.ToInt32(1) * 10),
-                Spell.Cast("Shadowburn", ret => StyxWoW.Me.CurrentTarget.HealthPercent < 20),
-                Spell.Cast("Havoc", ret => Unit.UnfriendlyUnitsNearTarget(8f).First(u => u != StyxWoW.Me.CurrentTarget && StyxWoW.Me.GetCurrentPower(WoWPowerType.BurningEmbers) >= Convert.ToInt32(1) * 10)),
+                Helpers.Common.CreateInterruptSpellCast(ret => Me.CurrentTarget),
+                Spell.Cast("Dark Soul: Instability", ret => Me.CurrentTarget.IsBoss),
+                Spell.PreventDoubleCast("Immolate", 2, ret => !Me.CurrentTarget.HasAura("Immolate")),
+                new Decorator(ret => SingularSettings.Instance.Warlock.UseAOE && Unit.UnfriendlyUnitsNearTarget(10f).Count() >= 4,
+                        Spell.Cast("Fire and Brimstone", ret => CurrentBurningEmbers >= 1)
+                        //Spell.CastOnGround(104232, ret => Me.CurrentTarget.Location, ret => !Me.CurrentTarget.HasAura("Rain of Fire"))
+                    ),
+                Spell.Cast("Havoc", ret => Unit.UnfriendlyUnitsNearTarget(8f).FirstOrDefault(u => u.Guid != Me.CurrentTarget.Guid && CurrentBurningEmbers > 1)),
+                Spell.CastOnGround(104232, ret => Me.CurrentTarget.Location, ret => !Me.CurrentTarget.HasAura("Rain of Fire") && SingularSettings.Instance.Warlock.UserRoF),
+                Spell.PreventDoubleCast("Conflagrate", 0.5, ret => BackdraftStacks < 1),
+                Spell.PreventDoubleCast("Chaos Bolt", 0.5, ret => CurrentBurningEmbers > 1 && BackdraftStacks < 3),
+                Spell.PreventDoubleCast("Incinerate", 0.5, ret => true),
+                Spell.Cast("Shadowburn", ret => Me.CurrentTarget.HealthPercent < 20),
+                
                 Movement.CreateMoveToTargetBehavior(true, 35f)
                 );
         }
@@ -66,15 +67,6 @@ namespace Singular.ClassSpecific.Warlock
             (
                 Spell.Cast("Immolate", ret => Unit.UnfriendlyUnitsNearTarget(8f).FirstOrDefault(u => !u.HasMyAura("Immolate"))),
                 Spell.Cast("Havoc", ret => Unit.UnfriendlyUnitsNearTarget(8f).First(u => u != StyxWoW.Me.CurrentTarget && SpellManager.CanCast("Chaos Bolt")))
-            );
-        }
-
-        private static Composite BigAOEGroup()
-        {
-            return new PrioritySelector
-            (
-                Spell.CastOnGround("Rain of Fire", ret => StyxWoW.Me.CurrentTarget.Location, ret => !NeedDelayCast(RainOfFire)),
-                Spell.Cast("Fire and Brimstone")
             );
         }
 
@@ -116,5 +108,6 @@ namespace Singular.ClassSpecific.Warlock
         static DateTime dt = DateTime.MinValue;
         static TimeSpan RainOfFire = new TimeSpan(0, 0, 0, 8);
         static TimeSpan Immolate = new TimeSpan(0, 0, 0, 2);
+        private static Double CurrentBurningEmbers { get { return (double)Me.GetPowerInfo(WoWPowerType.BurningEmbers).Current / 10; } }
     }
 }

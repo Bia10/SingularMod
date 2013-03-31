@@ -12,10 +12,12 @@
 #endregion
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using CommonBehaviors.Actions;
 using Styx;
+using Styx.Helpers;
 using Styx.CommonBot;
 using Styx.TreeSharp;
 using Styx.WoWInternals;
@@ -23,6 +25,7 @@ using Styx.WoWInternals.WoWObjects;
 using Styx.WoWInternals.World;
 using Action = Styx.TreeSharp.Action;
 using Singular.Settings;
+using Singular.Lists;
 
 namespace Singular.Helpers
 {
@@ -32,6 +35,8 @@ namespace Singular.Helpers
 
     internal static class Spell
     {
+        public static bool IsChanneling { get { return StyxWoW.Me.ChanneledCastingSpellId != 0 && StyxWoW.Me.IsChanneling; } }
+
         public static WoWDynamicObject GetGroundEffectBySpellId(int spellId)
         {
             return ObjectManager.GetObjectsOfType<WoWDynamicObject>().FirstOrDefault(o => o.SpellId == spellId);
@@ -192,6 +197,7 @@ namespace Singular.Helpers
 
         #endregion
 
+        /*
         #region PreventDoubleCast
 
         /// <summary>
@@ -230,7 +236,199 @@ namespace Singular.Helpers
         }
 
         #endregion
+        */
 
+        #region Double Cast Shit
+
+        // PRSettings.Instance.ThrottleTime is used throughout the rotationbases to enable a setable expiryTime for the methods below.
+
+        static readonly Dictionary<string, DoubleCastSpell> DoubleCastEntries = new Dictionary<string, DoubleCastSpell>();
+
+        private static void UpdateDoubleCastEntries(string spellName, double expiryTime)
+        {
+            if (DoubleCastEntries.ContainsKey(spellName)) DoubleCastEntries[spellName] = new DoubleCastSpell(spellName, expiryTime, DateTime.UtcNow);
+            if (!DoubleCastEntries.ContainsKey(spellName)) DoubleCastEntries.Add(spellName, new DoubleCastSpell(spellName, expiryTime, DateTime.UtcNow));
+        }
+
+        public static void OutputDoubleCastEntries()
+        {
+            foreach (var spell in DoubleCastEntries)
+            {
+                Logger.Write(spell.Key + " time: " + spell.Value.DoubleCastCurrentTime);
+            }
+        }
+
+        internal static void PulseDoubleCastEntries()
+        {
+            DoubleCastEntries.RemoveAll(t => DateTime.UtcNow.Subtract(t.DoubleCastCurrentTime).TotalSeconds >= t.DoubleCastExpiryTime);
+        }
+
+        public static Composite PreventDoubleCast(string spell, double expiryTime, Selection<bool> reqs = null)
+        {
+            return PreventDoubleCast(spell, expiryTime, ret => StyxWoW.Me.CurrentTarget, reqs);
+        }
+
+        public static Composite PreventDoubleCast(int spell, double expiryTime, Selection<bool> reqs = null)
+        {
+            return PreventDoubleCast(spell, expiryTime, target => StyxWoW.Me.CurrentTarget, reqs);
+        }
+
+        public static Composite PreventDoubleCast(string spell, double expiryTime, UnitSelectionDelegate onUnit, Selection<bool> reqs = null)
+        {
+            return PreventDoubleCast(spell, expiryTime, ret => StyxWoW.Me.CurrentTarget, reqs, false);
+        }
+
+        /// <summary>
+        /// This Method can enable / disable the Moving Check from CanCast and should fix Pauls issues
+        /// </summary>
+        /// <param name="spell">Name of the spell</param>
+        /// <param name="expiryTime">expiration time</param>
+        /// <param name="onUnit">which unit</param>
+        /// <param name="reqs">requirements</param>
+        /// <param name="ignoreMoving">false is default and does CanCast-check like all the time, set to true if u wanna ignore movin. usefull for talentchecks which enables Casting when moving</param>
+        /// <returns></returns>
+        public static Composite PreventDoubleCast(string spell, double expiryTime, UnitSelectionDelegate onUnit, Selection<bool> reqs = null, bool ignoreMoving = false)
+        {
+            return
+                new Decorator(
+                    ret =>
+                        ((reqs != null && reqs(ret)) || (reqs == null))
+                        && onUnit != null
+                        && onUnit(ret) != null
+                        && SpellManager.CanCast(spell, onUnit(ret), true, !ignoreMoving)
+                        && !DoubleCastEntries.ContainsKey(spell + onUnit(ret).GetHashCode()),
+                    new Sequence(
+                        new Action(a => SpellManager.Cast(spell, onUnit(a))),
+                        new Action(a => CooldownTracker.SpellUsed(spell)), // performace increase.
+                        new Action(a => UpdateDoubleCastEntries(spell.ToString(CultureInfo.InvariantCulture) + onUnit(a).GetHashCode(), expiryTime))));
+        }
+
+        public static Composite PreventDoubleCast(int spell, double expiryTime, UnitSelectionDelegate onUnit, Selection<bool> reqs = null)
+        {
+            return
+                new Decorator(
+                    ret =>
+                        ((reqs != null && reqs(ret)) || (reqs == null))
+                        && onUnit != null
+                        && onUnit(ret) != null
+                        && !DoubleCastEntries.ContainsKey(spell.ToString(CultureInfo.InvariantCulture) + onUnit(ret).GetHashCode()),
+                    new Sequence(
+                        new Action(a => SpellManager.Cast(spell, onUnit(a))),
+                        new Action(ret => CooldownTracker.SpellUsed(spell)),
+                        new Action(a => UpdateDoubleCastEntries(spell.ToString(CultureInfo.InvariantCulture) + onUnit(a).GetHashCode(), expiryTime))));
+        }
+
+        public static Composite PreventDoubleCastNoCanCast(string spell, double expiryTime, UnitSelectionDelegate onUnit, Selection<bool> reqs = null)
+        {
+            return
+                new Decorator(
+                    ret =>
+                        ((reqs != null && reqs(ret)) || (reqs == null))
+                        && onUnit != null
+                        && onUnit(ret) != null
+                        && !DoubleCastEntries.ContainsKey(spell + onUnit(ret).GetHashCode()),
+                    new Sequence(
+                        new Action(a => SpellManager.Cast(spell, onUnit(a))),
+                        new Action(ret => CooldownTracker.SpellUsed(spell)),
+                        new Action(a => UpdateDoubleCastEntries(spell.ToString(CultureInfo.InvariantCulture) + onUnit(a).GetHashCode(), expiryTime))));
+        }
+
+        public static Composite PreventDoubleChannel(string spell, double expiryTime, bool checkCancast, Selection<bool> reqs = null)
+        {
+            return PreventDoubleChannel(spell, expiryTime, checkCancast, onUnit => StyxWoW.Me.CurrentTarget, reqs);
+        }
+
+        public static Composite PreventDoubleChannel(string spell, double expiryTime, bool checkCancast, UnitSelectionDelegate onUnit, Selection<bool> reqs)
+        {
+            return PreventDoubleChannel(spell, expiryTime, checkCancast, onUnit, reqs, false);
+        }
+
+        public static Composite PreventDoubleChannel(string spell, double expiryTime, bool checkCancast, UnitSelectionDelegate onUnit, Selection<bool> reqs, bool ignoreMoving)
+        {
+            return new Decorator(
+                delegate(object a)
+                {
+                    if (IsChanneling)
+                        return false;
+
+                    if (!reqs(a))
+                        return false;
+
+                    if (onUnit != null && DoubleCastEntries.ContainsKey(spell + onUnit(a).GetHashCode()))
+                        return false;
+
+                    if (onUnit != null && (checkCancast && !SpellManager.CanCast(spell, onUnit(a), true, !ignoreMoving)))
+                        return false;
+
+                    return true;
+                },
+                new Sequence(
+                    new Action(a => SpellManager.Cast(spell, onUnit(a))),
+                    new Action(ret => CooldownTracker.SpellUsed(spell)),
+                    new Action(a => UpdateDoubleCastEntries(spell.ToString(CultureInfo.InvariantCulture) + onUnit(a).GetHashCode(), expiryTime))));
+        }
+
+        /*
+        public static Composite PreventDoubleHeal(string spell, double expiryTime, int HP = 100, Selection<bool> reqs = null)
+        {
+            return PreventDoubleHeal(spell, expiryTime, on => HealingManager.HealTarget, HP, reqs);
+        }
+
+        public static Composite PreventDoubleHeal(string spell, double expiryTime, UnitSelectionDelegate onUnit, int HP = 100, Selection<bool> reqs = null)
+        {
+            return new Decorator(
+                ret => (onUnit != null && onUnit(ret) != null && (reqs == null || reqs(ret)) && onUnit(ret).HealthPercent <= HP) && !DoubleCastEntries.ContainsKey(spell.ToString(CultureInfo.InvariantCulture) + onUnit(ret).GetHashCode()),
+                new Sequence(
+                    new Action(a => SpellManager.Cast(spell, onUnit(a))),
+                    new Action(ret => CooldownTracker.SpellUsed(spell)),
+                    new Action(a => UpdateDoubleCastEntries(spell.ToString(CultureInfo.InvariantCulture) + onUnit(a).GetHashCode(), expiryTime))));
+        }
+        */
+        public static Composite PreventDoubleCastOnGround(string spell, double expiryTime, LocationRetriever onLocation)
+        {
+            return PreventDoubleCastOnGround(spell, expiryTime, onLocation, ret => true);
+        }
+
+        public static Composite PreventDoubleCastOnGround(string spell, double expiryTime, LocationRetriever onLocation, CanRunDecoratorDelegate requirements, bool waitForSpell = false)
+        {
+            return new Decorator(
+                    ret =>
+                    onLocation != null && requirements(ret) && SpellManager.CanCast(spell) &&
+                    /*!BossList.IgnoreAoE.Contains(StyxWoW.Me.CurrentTarget.Entry) &&*/
+                    (StyxWoW.Me.Location.Distance(onLocation(ret)) <= SpellManager.Spells[spell].MaxRange ||
+                     SpellManager.Spells[spell].MaxRange == 0) && !DoubleCastEntries.ContainsKey(spell.ToString(CultureInfo.InvariantCulture) + onLocation(ret)),
+                    new Sequence(
+                        new Action(ret => SpellManager.Cast(spell)),
+
+                        new DecoratorContinue(ctx => waitForSpell,
+                            new WaitContinue(1,
+                                ret =>
+                                StyxWoW.Me.CurrentPendingCursorSpell != null &&
+                                StyxWoW.Me.CurrentPendingCursorSpell.Name == spell, new ActionAlwaysSucceed())),
+
+                        new Action(ret => SpellManager.ClickRemoteLocation(onLocation(ret))),
+                        new Action(ret => CooldownTracker.SpellUsed(spell)),
+                        new Action(ret => UpdateDoubleCastEntries(spell.ToString(CultureInfo.InvariantCulture) + onLocation(ret), expiryTime))));
+        }
+
+        struct DoubleCastSpell
+        {
+            public DoubleCastSpell(string spellName, double expiryTime, DateTime currentTime)
+                : this()
+            {
+
+                DoubleCastSpellName = spellName;
+                DoubleCastExpiryTime = expiryTime;
+                DoubleCastCurrentTime = currentTime;
+            }
+
+            private string DoubleCastSpellName { get; set; }
+            public double DoubleCastExpiryTime { get; set; }
+            public DateTime DoubleCastCurrentTime { get; set; }
+        }
+
+        #endregion
+ 
         #region Cast - by name
 
         /// <summary>
@@ -907,6 +1105,28 @@ namespace Singular.Helpers
 
                         new Action(ret => SpellManager.ClickRemoteLocation(onLocation(ret)))));
         }
+
+        public static Composite CastOnGround(int spellid, LocationRetriever onLocation)
+        {
+            return CastOnGround(spellid, onLocation, ret => true);
+        }
+
+        public static Composite CastOnGround(int spellid, LocationRetriever onLocation, CanRunDecoratorDelegate requirements, bool waitForSpell = false)
+        {
+            return
+                new Decorator(
+                    ret => onLocation != null && requirements(ret),
+                    new Sequence(
+                        new Action(ret => SpellManager.Cast(spellid)),
+
+                        new DecoratorContinue(ctx => waitForSpell,
+                            new WaitContinue(1,
+                                ret =>
+                                StyxWoW.Me.CurrentPendingCursorSpell != null &&
+                                StyxWoW.Me.CurrentPendingCursorSpell.Id == spellid, new ActionAlwaysSucceed())),
+
+                        new Action(ret => SpellManager.ClickRemoteLocation(onLocation(ret)))));
+        }
         #endregion
 
         #region Resurrect
@@ -927,6 +1147,172 @@ namespace Singular.Helpers
                     new Sequence(Cast(spellName, ctx => (WoWPlayer) ctx),
                         new Action(ctx => Blacklist.Add((WoWPlayer) ctx, TimeSpan.FromSeconds(30))))));
         }
+
+        #endregion
+
+        #region Cooldowntracker
+
+        public static class CooldownTracker
+        {
+
+            public static bool IsOnCooldown(int spell)
+            {
+                SpellFindResults results;
+                if (SpellManager.FindSpell(spell, out results))
+                {
+                    WoWSpell result = results.Override ?? results.Original;
+
+                    long lastUsed;
+                    if (cooldowns.TryGetValue(result, out lastUsed))
+                    {
+                        if (DateTime.Now.Ticks < lastUsed)
+                        {
+                            return result.Cooldown;
+                        }
+
+                        return false;
+                    }
+                }
+                return false;
+            }
+
+            public static bool IsOnCooldown(string spell)
+            {
+                SpellFindResults results;
+                if (SpellManager.FindSpell(spell, out results))
+                {
+                    WoWSpell result = results.Override ?? results.Original;
+
+                    long lastUsed;
+                    if (cooldowns.TryGetValue(result, out lastUsed))
+                    {
+                        if (DateTime.Now.Ticks < lastUsed)
+                        {
+                            return result.Cooldown;
+                        }
+
+                        return false;
+                    }
+                }
+                return false;
+            }
+
+            public static TimeSpan CooldownTimeLeft(int spell)
+            {
+
+                SpellFindResults results;
+                if (SpellManager.FindSpell(spell, out results))
+                {
+                    WoWSpell result = results.Override ?? results.Original;
+
+                    long lastUsed;
+                    if (cooldowns.TryGetValue(result, out lastUsed))
+                    {
+                        if (DateTime.Now.Ticks < lastUsed)
+                        {
+                            return result.CooldownTimeLeft;
+                        }
+
+                        return TimeSpan.MaxValue;
+                    }
+                }
+                return TimeSpan.MaxValue;
+            }
+
+            public static TimeSpan CooldownTimeLeft(string spell)
+            {
+
+                SpellFindResults results;
+                if (SpellManager.FindSpell(spell, out results))
+                {
+                    WoWSpell result = results.Override ?? results.Original;
+
+                    long lastUsed;
+                    if (cooldowns.TryGetValue(result, out lastUsed))
+                    {
+                        if (DateTime.Now.Ticks < lastUsed)
+                        {
+                            return result.CooldownTimeLeft;
+                        }
+
+                        return TimeSpan.MaxValue;
+                    }
+                }
+                return TimeSpan.MaxValue;
+            }
+
+            public static double CastTime(int spell)
+            {
+
+                SpellFindResults results;
+                if (SpellManager.FindSpell(spell, out results))
+                {
+                    WoWSpell result = results.Override ?? results.Original;
+
+                    long lastUsed;
+                    if (cooldowns.TryGetValue(result, out lastUsed))
+                    {
+                        if (DateTime.Now.Ticks < lastUsed)
+                        {
+                            return result.CastTime / 1000.0;
+                        }
+
+                        return 99999.9;
+                    }
+                }
+                return 99999.9;
+            }
+
+            public static double CastTime(string spell)
+            {
+
+                SpellFindResults results;
+                if (SpellManager.FindSpell(spell, out results))
+                {
+                    WoWSpell result = results.Override ?? results.Original;
+
+                    long lastUsed;
+                    if (cooldowns.TryGetValue(result, out lastUsed))
+                    {
+                        if (DateTime.Now.Ticks < lastUsed)
+                        {
+                            return result.CastTime / 1000.0;
+                        }
+
+                        return 99999.9;
+                    }
+                }
+                return 99999.9;
+            }
+
+            public static void SpellUsed(string spell)
+            {
+                SpellFindResults results;
+                if (SpellManager.FindSpell(spell, out results))
+                {
+                    WoWSpell result = results.Override ?? results.Original;
+                    cooldowns[result] = result.CooldownTimeLeft.Ticks + DateTime.Now.Ticks;
+                }
+            }
+
+            public static void SpellUsed(int spell)
+            {
+                SpellFindResults results;
+                if (SpellManager.FindSpell(spell, out results))
+                {
+                    WoWSpell result = results.Override ?? results.Original;
+                    cooldowns[result] = result.CooldownTimeLeft.Ticks + DateTime.Now.Ticks;
+                }
+            }
+
+            private static Dictionary<WoWSpell, long> cooldowns = new Dictionary<WoWSpell, long>();
+        }
+
+        #endregion
+
+        #region Nested type: Selection
+
+        internal delegate T Selection<out T>(object context);
 
         #endregion
     }
