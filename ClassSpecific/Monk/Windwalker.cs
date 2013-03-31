@@ -40,7 +40,7 @@ namespace Singular.ClassSpecific.Monk
                         //Spell.Cast("Nimble Brew", ret => Me.IsCrowdControlled()),
                         Spell.Cast("Invoke Xuen, the White Tiger", ret => Me.CurrentTarget.IsBoss),
                         //Item.UseEquippedTrinket(TrinketUsage.OnCooldownInCombat),
-                        Spell.Cast("Tigereye Brew", ret => Me.HasAura("Tigereye Brew", 10)),
+                        Spell.Cast("Tigereye Brew", ret => Me.HasAura("Tigereye Brew", 10) || Me.HealthPercent <= 45 && Me.HasAura("Healing Exlixirs") && Me.HasAura("Tigereye Brew")),
                         Spell.Cast("Energizing Brew", ret => Me.CurrentEnergy < 40),
                         Spell.Cast("Fortifying Brew", ret => Me.HealthPercent <= 50),
                         Spell.Cast("Touch of Death", ret => TalentManager.HasGlyph("Touch of Death") && Me.HasAura("Death Note")),
