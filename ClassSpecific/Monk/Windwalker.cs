@@ -36,7 +36,7 @@ namespace Singular.ClassSpecific.Monk
 
 		public static Composite BaseDPS()
 		{
-			new Decorator(
+			return new Decorator(
 				ret => !Spell.IsGlobalCooldown() && !StyxWoW.Me.Mounted,
 				new PrioritySelector(
 					Spell.WaitForCast(true),
