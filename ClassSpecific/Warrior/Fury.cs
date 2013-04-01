@@ -21,15 +21,17 @@ namespace Singular.ClassSpecific.Warrior
 		private static LocalPlayer Me { get { return StyxWoW.Me; } }
 		private static WarriorSettings WarriorSettings { get { return SingularSettings.Instance.Warrior; } }
 
-        [Behavior(BehaviorType.All, WoWClass.Warrior, WoWSpec.WarriorFury, WoWContext.All]
+        [Behavior(BehaviorType.All, WoWClass.Warrior, WoWSpec.WarriorFury, WoWContext.All)]
         public static Composite CreateFuryCombat()
         {
             return new PrioritySelector(
-				new Decorator( SingularSettings.Instance.AFKMode,
-			              Safers.EnsureTarget(),
-			              Movement.CreateMoveToLosBehavior(),
-			              Movement.CreateFaceTargetBehavior(),
-			              Movement.CreateMoveToTargetBehavior(true)
+				new Decorator( ret => SingularSettings.Instance.AFKMode,
+                    new PrioritySelector(
+			            Safers.EnsureTarget(),
+			            Movement.CreateMoveToLosBehavior(),
+			            Movement.CreateFaceTargetBehavior(),
+			            Movement.CreateMoveToMeleeBehavior(true)
+                    )
               	),
                 Helpers.Common.CreateInterruptSpellCast(ret => Me.CurrentTarget),
                 Spell.Cast("Impending Victory", ret => Me.HealthPercent < 90 && Me.HasAura("Victorious")),

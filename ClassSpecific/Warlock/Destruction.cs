@@ -22,38 +22,40 @@ namespace Singular.ClassSpecific.Warlock
         [Behavior(BehaviorType.All, WoWClass.Warlock, WoWSpec.WarlockDestruction, WoWContext.All)]
         public static Composite CreateWarlockDestructionCombat()
         {
-			return new Decorator(
-				ret => !Spell.IsGlobalCooldown() && !StyxWoW.Me.Mounted,
-				new Decorator( SingularSettings.Instance.AFKMode,
-					Safers.EnsureTarget(),
-					Movement.CreateMoveToLosBehavior(),
-					Movement.CreateFaceTargetBehavior(),
-	                Movement.CreateMoveToTargetBehavior(true, 35f)
-				),
+            return new PrioritySelector(
+                new Decorator(ret => SingularSettings.Instance.AFKMode,
+				    new PrioritySelector( 
+					    Safers.EnsureTarget(),
+					    Movement.CreateMoveToLosBehavior(),
+					    Movement.CreateFaceTargetBehavior(),
+	                    Movement.CreateMoveToTargetBehavior(true, 35f)
+				    )
+                ),
 				BaseRotation()
 			);
         }
 
 		public static Composite BaseRotation()
 		{
-			return new PrioritySelector(
-				Spell.WaitForCast(true),
-				Helpers.Common.CreateInterruptSpellCast(ret => Me.CurrentTarget),
-				Spell.Cast("Dark Soul: Instability", ret => Me.CurrentTarget.IsBoss),
-				Spell.PreventDoubleCast("Immolate", 2, ret => !Me.CurrentTarget.HasAura("Immolate")),
-				new Decorator(ret => SingularSettings.Instance.Warlock.UseAOE && Unit.UnfriendlyUnitsNearTarget(10f).Count() >= 6,
-			              Spell.Cast("Fire and Brimstone", ret => CurrentBurningEmbers >= 1),
-			              Spell.PreventDoubleCast("Immolate", 2, ret => !Me.CurrentTarget.HasAura("Immolate"))
-			              //Spell.CastOnGround(104232, ret => Me.CurrentTarget.Location, ret => !Me.CurrentTarget.HasAura("Rain of Fire"))
-			              ),
-				Spell.Cast("Havoc", ret => Unit.UnfriendlyUnitsNearTarget(8f).FirstOrDefault(u => u.Guid != Me.CurrentTarget.Guid && CurrentBurningEmbers >= 1)),
-				Spell.PreventDoubleCast("Chaos Bolt", 1, ret => CurrentBurningEmbers >= 1 && BackdraftStacks < 3 && Me.CurrentTarget.HasAura("Immolate") && Me.CurrentTarget.HealthPercent > 20),
-				Spell.CastOnGround(104232, ret => Me.CurrentTarget.Location, ret => !Me.CurrentTarget.HasAura("Rain of Fire") && Me.CurrentTarget.Distance.Between(1, 35) && SingularSettings.Instance.Warlock.UserRoF),
-				Spell.PreventDoubleCast("Conflagrate", 1, ret => BackdraftStacks < 1 && Me.CurrentTarget.HasAura("Immolate")),
-				Spell.PreventDoubleCast("Incinerate", 1, ret => !Me.HasAura("Havoc", 3) && Me.CurrentTarget.HasAura("Immolate")),
-				Spell.Cast("Shadowburn", ret => Me.CurrentTarget.HealthPercent < 20),
-				
-				Movement.CreateMoveToTargetBehavior(true, 35f)
+            return new Decorator( ret => !Spell.IsGlobalCooldown() && !StyxWoW.Me.Mounted,
+			    new PrioritySelector(
+				    Spell.WaitForCast(true),
+				    Helpers.Common.CreateInterruptSpellCast(ret => Me.CurrentTarget),
+				    Spell.Cast("Dark Soul: Instability", ret => Me.CurrentTarget.IsBoss),
+				    Spell.PreventDoubleCast("Immolate", 2, ret => !Me.CurrentTarget.HasAura("Immolate")),
+				    new Decorator(ret => SingularSettings.Instance.Warlock.UseAOE && Unit.UnfriendlyUnitsNearTarget(10f).Count() >= 6,
+                        new PrioritySelector(
+			                  Spell.Cast("Fire and Brimstone", ret => CurrentBurningEmbers >= 1),
+			                  Spell.PreventDoubleCast("Immolate", 2, ret => !Me.CurrentTarget.HasAura("Immolate"))
+			                  //Spell.CastOnGround(104232, ret => Me.CurrentTarget.Location, ret => !Me.CurrentTarget.HasAura("Rain of Fire"))
+			                  )),
+				    Spell.Cast("Havoc", ret => Unit.UnfriendlyUnitsNearTarget(8f).FirstOrDefault(u => u.Guid != Me.CurrentTarget.Guid && CurrentBurningEmbers >= 1)),
+				    Spell.PreventDoubleCast("Chaos Bolt", 1, ret => CurrentBurningEmbers >= 1 && BackdraftStacks < 3 && Me.CurrentTarget.HasAura("Immolate") && Me.CurrentTarget.HealthPercent > 20),
+				    Spell.CastOnGround(104232, ret => Me.CurrentTarget.Location, ret => !Me.CurrentTarget.HasAura("Rain of Fire") && Me.CurrentTarget.Distance.Between(1, 35) && SingularSettings.Instance.Warlock.UserRoF),
+				    Spell.PreventDoubleCast("Conflagrate", 1, ret => BackdraftStacks < 1 && Me.CurrentTarget.HasAura("Immolate")),
+				    Spell.PreventDoubleCast("Incinerate", 1, ret => !Me.HasAura("Havoc", 3) && Me.CurrentTarget.HasAura("Immolate")),
+				    Spell.Cast("Shadowburn", ret => Me.CurrentTarget.HealthPercent < 20)
+                )
 			);
 		}
 

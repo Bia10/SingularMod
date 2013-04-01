@@ -25,11 +25,13 @@ namespace Singular.ClassSpecific.Monk
         public static Composite CreateWindwalkerMonkCombat()
         {
 			return new PrioritySelector(
-				new Decorator( SingularSettings.Instance.AFKMode,
+				new Decorator( ret => SingularSettings.Instance.AFKMode,
+                    new PrioritySelector(
 			              Safers.EnsureTarget(),
 			              Movement.CreateMoveToLosBehavior(),
 			              Movement.CreateFaceTargetBehavior(),
-			              Movement.CreateMoveToTargetBehavior(true)
+			              Movement.CreateMoveToMeleeBehavior(true)
+                          )
 		              ),
 				BaseRotation()
 			);

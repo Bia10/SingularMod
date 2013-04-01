@@ -10,6 +10,7 @@ using Styx.TreeSharp;
 using System.Collections.Generic;
 using Styx.CommonBot;
 using Action = Styx.TreeSharp.Action;
+using Styx.WoWInternals.WoWObjects;
 
 namespace Singular.ClassSpecific.Monk
 {
@@ -22,11 +23,13 @@ namespace Singular.ClassSpecific.Monk
         public static Composite CreateBrewmasterMonkInstanceCombat()
         {
 			return new PrioritySelector(
-				new Decorator( SingularSettings.Instance.AFKMode,
-				              Safers.EnsureTarget(),
-				              Movement.CreateMoveToLosBehavior(),
-				              Movement.CreateFaceTargetBehavior(),
-				              Movement.CreateMoveToTargetBehavior(true)
+				new Decorator( ret => SingularSettings.Instance.AFKMode,
+                    new PrioritySelector(
+				        Safers.EnsureTarget(),
+				        Movement.CreateMoveToLosBehavior(),
+				        Movement.CreateFaceTargetBehavior(),
+				        Movement.CreateMoveToMeleeBehavior(true)
+                    )
 	          	),
 				BaseRotation()
 			);
