@@ -62,7 +62,7 @@ namespace Singular.ClassSpecific.Monk
 					Spell.Cast("Chi Wave", ret => !Me.CurrentTarget.IsPlayer || Me.CurrentTarget.IsPlayer && Me.HealthPercent <= 75),
 					//Spell.Cast("Dampen Harm"),
 					Spell.Cast("Spinning Fire Blossom", ret => !Me.CurrentTarget.IsBoss && Me.CurrentTarget.Distance > 10 && Me.IsSafelyFacing(Me.CurrentTarget)),
-					Spell.Cast("Disable", ret => !Me.CurrentTarget.HasMyAura("Disable")),
+					Spell.Cast("Disable", ret => Me.CurrentTarget.IsPlayer && !Me.CurrentTarget.HasMyAura("Disable")),
 					Spell.Cast("Leg Sweep", ret => Me.CurrentTarget.IsWithinMeleeRange && MonkSettings.AOEStun),
 					Spell.Cast("Ring of Peace", ret => Me.CurrentTarget.IsPlayer && Me.CurrentTarget.IsWithinMeleeRange),
 					Spell.Cast("Grapple Weapon", ret => Me.CurrentEnergy >= 20 && Me.CurrentTarget.IsPlayer && !Me.HasAura("Ring of Peace")),
