@@ -74,6 +74,12 @@ namespace Singular.Settings
         [DisplayName("AOE Stun")]
         public bool AOEStun { get; set; }
 
+		[Setting]
+		[Styx.Helpers.DefaultValue(true)]
+		[Category("Common")]
+		[DisplayName("Paralysis")]
+		public bool Paralysis { get; set; }
+
         #endregion
 
 

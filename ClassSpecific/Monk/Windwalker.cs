@@ -43,7 +43,7 @@ namespace Singular.ClassSpecific.Monk
 					Spell.WaitForCast(true),
 					//cc & interrupt stuff
 					Helpers.Common.CreateInterruptSpellCast(ret => StyxWoW.Me.CurrentTarget),
-					Spell.Cast("Paralysis", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.Distance.Between(8, 20) && Me.IsFacing(u) && u != Me.CurrentTarget)),
+					Spell.Cast("Paralysis", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.Distance.Between(8, 20) && Me.IsFacing(u) && u != Me.CurrentTarget && SingularSettings.Instance.Monk.Paralysis)),
 					Spell.Cast("Quaking Palm", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.IsWithinMeleeRange && Me.IsFacing(u) && !u.HasAura("Paralysis") && u != Me.CurrentTarget)),
 					Spell.Cast("Spear Hand Strike", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.IsWithinMeleeRange && Me.IsFacing(u) && u.IsCastingHealingSpell)),
 
@@ -71,7 +71,7 @@ namespace Singular.ClassSpecific.Monk
 					Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
 					
 					Spell.Cast("Fists of Fury",
-				           ret => Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && !Me.HasAura("Combo Breaker: Blackout Kick") && !Me.IsMoving && Me.HasAura("Tiger Power") && Me.CurrentChi >= 3),
+				           ret => Me.CurrentEnergy <= 60 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && !Me.HasAura("Combo Breaker: Blackout Kick") && !Me.IsMoving && Me.HasAura("Tiger Power") && Me.CurrentChi >= 3),
 					
 					new Decorator
 					(ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= 4 && SingularSettings.Instance.Monk.UseAOE,
