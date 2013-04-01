@@ -19,7 +19,7 @@ namespace Singular.ClassSpecific.Monk
 		private static LocalPlayer Me { get { return StyxWoW.Me; } }
 		private static MonkSettings MonkSettings { get { return SingularSettings.Instance.Monk; } }
 
-        [Behavior(BehaviorType.All, WoWClass.Monk, WoWSpec.MonkBrewmaster, WoWContext.All)]
+        [Behavior(BehaviorType.Pull | BehaviorType.Combat, WoWClass.Monk, WoWSpec.MonkBrewmaster, WoWContext.All)]
         public static Composite CreateBrewmasterMonkInstanceCombat()
         {
 			return new PrioritySelector(

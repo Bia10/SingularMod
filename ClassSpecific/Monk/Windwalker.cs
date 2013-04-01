@@ -21,7 +21,7 @@ namespace Singular.ClassSpecific.Monk
         private static LocalPlayer Me { get { return StyxWoW.Me; } }
         private static MonkSettings MonkSettings { get { return SingularSettings.Instance.Monk; } }
 
-        [Behavior(BehaviorType.All, WoWClass.Monk, WoWSpec.MonkWindwalker, WoWContext.All)]
+        [Behavior(BehaviorType.Pull | BehaviorType.Combat, WoWClass.Monk, WoWSpec.MonkWindwalker, WoWContext.All)]
         public static Composite CreateWindwalkerMonkCombat()
         {
 			return new PrioritySelector(

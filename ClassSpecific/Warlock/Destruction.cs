@@ -19,7 +19,7 @@ namespace Singular.ClassSpecific.Warlock
     {
         private static LocalPlayer Me { get { return StyxWoW.Me; } }
 
-        [Behavior(BehaviorType.All, WoWClass.Warlock, WoWSpec.WarlockDestruction, WoWContext.All)]
+        [Behavior(BehaviorType.Pull | BehaviorType.Combat, WoWClass.Warlock, WoWSpec.WarlockDestruction, WoWContext.All)]
         public static Composite CreateWarlockDestructionCombat()
         {
             return new PrioritySelector(

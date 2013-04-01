@@ -21,7 +21,7 @@ namespace Singular.ClassSpecific.Warrior
 		private static LocalPlayer Me { get { return StyxWoW.Me; } }
 		private static WarriorSettings WarriorSettings { get { return SingularSettings.Instance.Warrior; } }
 
-        [Behavior(BehaviorType.All, WoWClass.Warrior, WoWSpec.WarriorFury, WoWContext.All)]
+        [Behavior(BehaviorType.Pull | BehaviorType.Combat, WoWClass.Warrior, WoWSpec.WarriorFury, WoWContext.All)]
         public static Composite CreateFuryCombat()
         {
             return new PrioritySelector(
