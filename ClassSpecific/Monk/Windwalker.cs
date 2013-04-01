@@ -45,7 +45,7 @@ namespace Singular.ClassSpecific.Monk
 					Spell.WaitForCast(true),
 					//cc & interrupt stuff
 					Helpers.Common.CreateInterruptSpellCast(ret => StyxWoW.Me.CurrentTarget),
-					Spell.Cast("Paralysis", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.Distance.Between(8, 20) && Me.IsFacing(u) && u != Me.CurrentTarget && MonkSettings.Paralysis)),
+					Spell.Cast("Paralysis", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.Distance.Between(8, 20) && Me.IsFacing(u) && u.Guid != Me.CurrentTarget.Guid && MonkSettings.Paralysis)),
 					Spell.Cast("Quaking Palm", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.IsWithinMeleeRange && Me.IsFacing(u) && !u.HasAura("Paralysis") && u != Me.CurrentTarget)),
 					Spell.Cast("Spear Hand Strike", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.IsWithinMeleeRange && Me.IsFacing(u) && u.IsCastingHealingSpell)),
 
