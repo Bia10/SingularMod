@@ -9,7 +9,6 @@ using Styx.TreeSharp;
 using Styx.WoWInternals.WoWObjects;
 using Action = Styx.TreeSharp.Action;
 using Rest = Singular.Helpers.Rest;
-
 using Singular.Settings;
 using Styx.WoWInternals;
 
@@ -49,7 +48,7 @@ namespace Singular.ClassSpecific.Monk
 
 					//CD & defense
 					Spell.Cast("Invoke Xuen, the White Tiger", ret => Me.CurrentTarget.IsPlayer || Me.CurrentTarget.IsBoss),
-					Spell.Cast("Tigereye Brew", ret => Me.HasAura("Tigereye Brew", 10) || TalentManager.Talent. Me.HealthPercent <= 40 && Me.HasAura("Tigereye Brew")),
+					Spell.Cast("Tigereye Brew", ret => Me.HasAura("Tigereye Brew", 10) || Me.HealthPercent <= 40 && Me.HasAura("Tigereye Brew")),
 					Spell.Cast("Energizing Brew", ret => Me.CurrentEnergy < 40),
 					Spell.Cast("Fortifying Brew", ret => Me.HealthPercent <= 35),
 					Spell.Cast("Touch of Karma", ret => !Me.CurrentTarget.IsBoss && Me.HealthPercent <= 75 || Me.CurrentTarget.IsBoss && Me.HealthPercent <= 50),
@@ -58,23 +57,17 @@ namespace Singular.ClassSpecific.Monk
 					Spell.Cast("Touch of Death", ret => Me.HasAura("Death Note") || Me.CurrentTarget.IsPlayer && Me.CurrentTarget.HealthPercent < 10),
 					Spell.Cast("Expel Harm", ret => Me.CurrentEnergy >= 40 && Me.HealthPercent <= 85),
 					Spell.Cast("Chi Wave", ret => !Me.CurrentTarget.IsPlayer || Me.CurrentTarget.IsPlayer && Me.HealthPercent <= 75),
-					Spell.Cast("Dampen Harm"),
+					//Spell.Cast("Dampen Harm"),
 					Spell.Cast("Spinning Fire Blossom", ret => !Me.CurrentTarget.IsBoss && Me.CurrentTarget.Distance > 10 && Me.IsSafelyFacing(Me.CurrentTarget)),
 					Spell.Cast("Disable", ret => !Me.CurrentTarget.HasMyAura("Disable")),
 					Spell.Cast("Leg Sweep", ret => Me.CurrentTarget.IsWithinMeleeRange && SingularSettings.Instance.Monk.AOEStun),
 					Spell.Cast("Ring of Peace", ret => Me.CurrentTarget.IsPlayer && Me.CurrentTarget.IsWithinMeleeRange),
 					Spell.Cast("Grapple Weapon", ret => Me.CurrentEnergy >= 20 && Me.CurrentTarget.IsPlayer && !Me.HasAura("Ring of Peace")),
-					Spell.Cast("Tiger Palm",
-				           ret => Me.CurrentChi > 0
-				           && (!Me.HasAura("Tiger Power") || Me.GetAuraTimeLeft("Tiger Power", true).TotalSeconds < 4) || Me.HasAura("Combo Breaker: Tiger Palm")),
-						
+					Spell.Cast("Tiger Palm", ret => Me.CurrentChi > 0 && (!Me.HasAura("Tiger Power") || Me.GetAuraTimeLeft("Tiger Power", true).TotalSeconds < 4) || Me.HasAura("Combo Breaker: Tiger Palm")),						
 					Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
+					Spell.Cast("Fists of Fury", ret => Me.CurrentEnergy <= 60 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && !Me.HasAura("Combo Breaker: Blackout Kick") && !Me.IsMoving && Me.HasAura("Tiger Power") && Me.CurrentChi >= 3),
 					
-					Spell.Cast("Fists of Fury",
-				           ret => Me.CurrentEnergy <= 60 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && !Me.HasAura("Combo Breaker: Blackout Kick") && !Me.IsMoving && Me.HasAura("Tiger Power") && Me.CurrentChi >= 3),
-					
-					new Decorator
-					(ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= 4 && SingularSettings.Instance.Monk.UseAOE,
+					new Decorator( ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= 4 && SingularSettings.Instance.Monk.UseAOE,
 					 new PrioritySelector
 					 (
 						Spell.Cast("Expel Harm", ret => Me.CurrentEnergy >= 40 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
