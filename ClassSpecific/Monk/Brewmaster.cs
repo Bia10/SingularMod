@@ -67,10 +67,10 @@ namespace Singular.ClassSpecific.Monk
             new PrioritySelector(
                 Helpers.Common.CreateInterruptSpellCast(ret => StyxWoW.Me.CurrentTarget),
                 Spell.Cast("Invoke Xuen, the White Tiger", ret => Unit.IsBoss(StyxWoW.Me.CurrentTarget)),
-                Spell.Cast("Paralysis", ret => Unit.NearbyUnfriendlyUnits.FirstOrDefault(u => u.Distance.Between(8, 20) && StyxWoW.Me.IsFacing(u) && u.IsCasting && u != StyxWoW.Me.CurrentTarget)),
+                Spell.Cast("Paralysis", ret => Unit.NearbyUnfriendlyUnits.FirstOrDefault(u => u.Distance.Between(12, 20) && StyxWoW.Me.IsFacing(u) && u.IsCasting && u != StyxWoW.Me.CurrentTarget)),
                 Spell.Cast("Keg Smash", ctx => StyxWoW.Me.MaxChi - StyxWoW.Me.CurrentChi >= 2),// &&                    Clusters.GetCluster(StyxWoW.Me, Unit.NearbyUnfriendlyUnits, ClusterType.Radius, 8).Any(u => !u.HasAura("Weakened Blows"))),
                 Spell.CastOnGround("Dizzying Haze", ctx => TankManager.Instance.NeedToTaunt.FirstOrDefault().Location , ctx => TankManager.Instance.NeedToTaunt.Any()/* && SingularSettings.Instance.Monk.DizzyTaunt*/, false),
-                Spell.Cast("Rushing Jade Wind", ret => StyxWoW.Me.CurrentChi >= 2),
+                Spell.Cast("Rushing Jade Wind", ret => StyxWoW.Me.CurrentChi >= 2 && StyxWoW.Me.CurrentTarget.IsSafelyFacing),
                 // AOE
                 new Decorator(ctx => Unit.NearbyUnfriendlyUnits.Count(u => u.DistanceSqr <= 8 * 8) >= 3,
                     new PrioritySelector(
