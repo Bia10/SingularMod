@@ -21,20 +21,21 @@ namespace Singular.ClassSpecific.Monk
         private static LocalPlayer Me { get { return StyxWoW.Me; } }
         private static MonkSettings MonkSettings { get { return SingularSettings.Instance.Monk; } }
 
-        [Behavior(BehaviorType.Pull | BehaviorType.Combat, WoWClass.Monk, WoWSpec.MonkWindwalker, WoWContext.All)]
-        public static Composite CreateWindwalkerMonkCombatInstances()
+        [Behavior(BehaviorType.All, WoWClass.Monk, WoWSpec.MonkWindwalker, WoWContext.All)]
+        public static Composite CreateWindwalkerMonkCombat()
         {
 			return new PrioritySelector(
-				//Safers.EnsureTarget(),
-				//Movement.CreateMoveToLosBehavior(),
-				//Movement.CreateFaceTargetBehavior(),
-				//Helpers.Common.CreateAutoAttack(true),
-				BaseDPS()
-				//Movement.CreateMoveToMeleeBehavior(true)
-				);
+				new Decorator( SingularSettings.Instance.AFKMode,
+			              Safers.EnsureTarget(),
+			              Movement.CreateMoveToLosBehavior(),
+			              Movement.CreateFaceTargetBehavior(),
+			              Movement.CreateMoveToTargetBehavior(true)
+		              ),
+				BaseRotation()
+			);
         }
 
-		public static Composite BaseDPS()
+		public static Composite BaseRotation()
 		{
 			return new Decorator(
 				ret => !Spell.IsGlobalCooldown() && !StyxWoW.Me.Mounted,
@@ -42,7 +43,7 @@ namespace Singular.ClassSpecific.Monk
 					Spell.WaitForCast(true),
 					//cc & interrupt stuff
 					Helpers.Common.CreateInterruptSpellCast(ret => StyxWoW.Me.CurrentTarget),
-					Spell.Cast("Paralysis", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.Distance.Between(8, 20) && Me.IsFacing(u) && u != Me.CurrentTarget && SingularSettings.Instance.Monk.Paralysis)),
+					Spell.Cast("Paralysis", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.Distance.Between(8, 20) && Me.IsFacing(u) && u != Me.CurrentTarget && MonkSettings.Paralysis)),
 					Spell.Cast("Quaking Palm", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.IsWithinMeleeRange && Me.IsFacing(u) && !u.HasAura("Paralysis") && u != Me.CurrentTarget)),
 					Spell.Cast("Spear Hand Strike", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.IsWithinMeleeRange && Me.IsFacing(u) && u.IsCastingHealingSpell)),
 
@@ -60,14 +61,14 @@ namespace Singular.ClassSpecific.Monk
 					//Spell.Cast("Dampen Harm"),
 					Spell.Cast("Spinning Fire Blossom", ret => !Me.CurrentTarget.IsBoss && Me.CurrentTarget.Distance > 10 && Me.IsSafelyFacing(Me.CurrentTarget)),
 					Spell.Cast("Disable", ret => !Me.CurrentTarget.HasMyAura("Disable")),
-					Spell.Cast("Leg Sweep", ret => Me.CurrentTarget.IsWithinMeleeRange && SingularSettings.Instance.Monk.AOEStun),
+					Spell.Cast("Leg Sweep", ret => Me.CurrentTarget.IsWithinMeleeRange && MonkSettings.AOEStun),
 					Spell.Cast("Ring of Peace", ret => Me.CurrentTarget.IsPlayer && Me.CurrentTarget.IsWithinMeleeRange),
 					Spell.Cast("Grapple Weapon", ret => Me.CurrentEnergy >= 20 && Me.CurrentTarget.IsPlayer && !Me.HasAura("Ring of Peace")),
 					Spell.Cast("Tiger Palm", ret => Me.CurrentChi > 0 && (!Me.HasAura("Tiger Power") || Me.GetAuraTimeLeft("Tiger Power", true).TotalSeconds < 4) || Me.HasAura("Combo Breaker: Tiger Palm")),						
 					Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
 					Spell.Cast("Fists of Fury", ret => Me.CurrentEnergy <= 60 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && !Me.HasAura("Combo Breaker: Blackout Kick") && !Me.IsMoving && Me.HasAura("Tiger Power") && Me.CurrentChi >= 3),
 					
-					new Decorator( ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= 4 && SingularSettings.Instance.Monk.UseAOE,
+					new Decorator( ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= 4 && MonkSettings.UseAOE,
 					 new PrioritySelector
 					 (
 						Spell.Cast("Expel Harm", ret => Me.CurrentEnergy >= 40 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),

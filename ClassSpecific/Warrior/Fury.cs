@@ -19,25 +19,26 @@ namespace Singular.ClassSpecific.Warrior
     public class Fury
     {
 		private static LocalPlayer Me { get { return StyxWoW.Me; } }
-        #region Normal
-        [Behavior(BehaviorType.Pull, WoWClass.Warrior, WoWSpec.WarriorFury)]
-        [Behavior(BehaviorType.CombatBuffs, WoWClass.Warrior, WoWSpec.WarriorFury)]
+		private static WarriorSettings WarriorSettings { get { return SingularSettings.Instance.Warrior; } }
 
-        [Behavior(BehaviorType.Combat, WoWClass.Warrior, WoWSpec.WarriorFury)]
-        public static Composite CreateFuryNormalCombat()
+        [Behavior(BehaviorType.All, WoWClass.Warrior, WoWSpec.WarriorFury, WoWContext.All]
+        public static Composite CreateFuryCombat()
         {
-
             return new PrioritySelector(
-                Safers.EnsureTarget(),
+				new Decorator( SingularSettings.Instance.AFKMode,
+			              Safers.EnsureTarget(),
+			              Movement.CreateMoveToLosBehavior(),
+			              Movement.CreateFaceTargetBehavior(),
+			              Movement.CreateMoveToTargetBehavior(true)
+              	),
                 Helpers.Common.CreateInterruptSpellCast(ret => Me.CurrentTarget),
                 Spell.Cast("Impending Victory", ret => Me.HealthPercent < 90 && Me.HasAura("Victorious")),
 				Spell.Cast("Die by the Sword", ret => Me.HealthPercent <= 30),
 				Spell.Cast("Rallying Cry", ret => Me.HealthPercent <= 20),
-				//Item.UseEquippedTrinket(TrinketUsage.OnCooldown),
                 new Decorator( ret => !Spell.IsGlobalCooldown() && !Me.Mounted,
                 MainDPS()
                 )
-                );
+            );
         }
 
 		//Handle DPS Rotation - Optimized by superkhung
@@ -63,7 +64,7 @@ namespace Singular.ClassSpecific.Warrior
 				//Handle AOE rotation when more than 1 target nearby within 8 yard
                 new Decorator
 				(
-                    ret => Unit.NearbyUnfriendlyUnits.Count(u => u.IsWithinMeleeRange) > 1 && SingularSettings.Instance.Warrior.UseWarriorAOE,
+                    ret => Unit.NearbyUnfriendlyUnits.Count(u => u.IsWithinMeleeRange) > 1 && WarriorSettings.UseWarriorAOE,
 					//ret => Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8 && !u.IsPlayer) >= 2,
                     new PrioritySelector
 					(
@@ -92,7 +93,7 @@ namespace Singular.ClassSpecific.Warrior
 				//Ignore Wild Strike if there's more than 2 target nearby, we need to save rage for Whirlwind
 				new Decorator
 				(
-					ret => Unit.NearbyUnfriendlyUnits.Count() == 1 || !SingularSettings.Instance.Warrior.UseWarriorAOE,
+					ret => Unit.NearbyUnfriendlyUnits.Count() == 1 || !WarriorSettings.UseWarriorAOE,
 					new PrioritySelector
 					(
 		                Spell.Cast("Wild Strike", ret => !WithinExecuteRange && TargetSmashed && BTCD.TotalSeconds >= 1 && Me.RagePercent >= 40),
@@ -104,9 +105,6 @@ namespace Singular.ClassSpecific.Warrior
                 Spell.Cast("Battle Shout", ret => Me.CurrentRage < 60)
         	);
         }
-
-        #endregion
-
 
         #region Utils
         private static readonly WaitTimer InterceptTimer = new WaitTimer(TimeSpan.FromMilliseconds(2000));

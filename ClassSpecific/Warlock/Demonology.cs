@@ -15,21 +15,10 @@ namespace Singular.ClassSpecific.Warlock
     public class Demonology
     {
 		private static LocalPlayer Me { get { return StyxWoW.Me; } }
+
         #region Normal Rotation
 
-        [Behavior(BehaviorType.Pull, WoWClass.Warlock, WoWSpec.WarlockDemonology, WoWContext.All)]
-        public static Composite CreateWarlockDemonologyNormalPull()
-        {
-            return new PrioritySelector(
-                //Safers.EnsureTarget(),
-                Spell.WaitForCast(true),
-                //Helpers.Common.CreateAutoAttack(true),
-                Spell.Cast("Corruption"),
-				Spell.Cast("Hand of Gul'dan")
-                );
-        }
-
-        [Behavior(BehaviorType.Combat, WoWClass.Warlock, WoWSpec.WarlockDemonology, WoWContext.All)]
+        [Behavior(BehaviorType.All, WoWClass.Warlock, WoWSpec.WarlockDemonology, WoWContext.All)]
         public static Composite CreateWarlockDemonologyNormalCombat()
         {
             return new PrioritySelector
@@ -85,14 +74,14 @@ namespace Singular.ClassSpecific.Warlock
                 // Build demonic fury
                 Spell.Cast("Corruption", ret => CorruptionTime <= 3 && !WithinMetamorphosisPhase),
 				Spell.Cast("Hand of Gul'dan", ret => ShadowflameTime <= 3 && !WithinMetamorphosisPhase),  
-				Spell.Cast("Soul Fire", ret => Me.HasAura("Molten Core", 2)),
-				Spell.Cast("Shadow Bolt", ret =>  !WithinMetamorphosisPhase),
+				Spell.PreventDoubleCast("Soul Fire", 1, ret => Me.HasAura("Molten Core") && !WithinMetamorphosisPhase),
+				Spell.PreventDoubleCast("Shadow Bolt", 1, ret =>  !WithinMetamorphosisPhase),
                 Spell.Cast("Felstorm", ret => Me.GotAlivePet),
                 //DotCleave(),
                 Spell.Cast("Grimoire: Felguard"),
                 Spell.Cast("Summon Doomguard", ret => Unit.IsBoss(Me.CurrentTarget)),
-                Spell.Cast("Soul Fire", ret => Me.HasAura("Molten Core") && !WithinMetamorphosisPhase && !NeedDelayCast(SoulFireTime)),
-                //Maintain Doom on target
+
+					//Maintain Doom on target
            		new Decorator
                	(
                     ret => DoomTime <= 3 && (Unit.IsBoss(Me.CurrentTarget)),

@@ -86,6 +86,12 @@ namespace Singular.Settings
         }
 
         #region Category: General
+		[Setting]
+		[DefaultValue(false)]
+		[Category("Movement")]
+		[DisplayName("AFK")]
+		[Description("AFK mode")]
+		public bool AFKMode { get; set; }
 
         [Setting]
         [DefaultValue(AllowMovementType.Auto)]
