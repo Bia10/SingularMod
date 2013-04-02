@@ -40,7 +40,7 @@ namespace Singular.ClassSpecific.Warrior
 		//Handle DPS Rotation - Optimized by superkhung
         private static Composite MainDPS()
         {
-            return new Decorator( ret => !Me.Mounted && Me.CurrentTarget.Distance < 8,
+            return new Decorator( ret => !Me.Mounted,
                 new PrioritySelector
 			    (
                     Helpers.Common.CreateInterruptSpellCast(ret => Me.CurrentTarget),
@@ -62,7 +62,7 @@ namespace Singular.ClassSpecific.Warrior
 
 				    //Spam Execute on Execute phase
                     Spell.Cast("Execute", ret => WithinExecuteRange),
-                    Spell.Cast("Dragon Roar", ret => Me.CurrentTarget.Distance < 8),
+                    Spell.Cast("Dragon Roar"),
 				    //Handle AOE rotation when more than 1 target nearby within 8 yard
                     new Decorator
 				    (
