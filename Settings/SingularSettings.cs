@@ -86,6 +86,13 @@ namespace Singular.Settings
         }
 
         #region Category: General
+        [Setting]
+        [DefaultValue(6)]
+        [Category("General")]
+        [DisplayName("AOE Targets")]
+        [Description("Number of target need to AOE.")]
+        public int AOENumber { get; set; }
+
 		[Setting]
 		[DefaultValue(false)]
 		[Category("Movement")]

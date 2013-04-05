@@ -56,6 +56,9 @@ namespace Singular.ClassSpecific.Monk
 					Spell.Cast("Fortifying Brew", ret => Me.HealthPercent <= 35),
 					Spell.Cast("Touch of Karma", ret => !Me.CurrentTarget.IsBoss && Me.HealthPercent <= 75 || Me.CurrentTarget.IsBoss && Me.HealthPercent <= 50),
 
+                    //drop healing sphere
+                    Spell.CastOnGround("Healing Sphere", ret => Me.Location, ret => Me.CurrentEnergy >= 40 && Me.HealthPercent <= 50 && MonkSettings.MoveToSpheres),
+
 					//dps rotation
 					Spell.Cast("Touch of Death", ret => Me.HasAura("Death Note") || Me.CurrentTarget.IsPlayer && Me.CurrentTarget.HealthPercent < 10),
 					Spell.Cast("Expel Harm", ret => Me.CurrentEnergy >= 40 && Me.HealthPercent <= 85),
@@ -70,7 +73,7 @@ namespace Singular.ClassSpecific.Monk
 					Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
 					Spell.Cast("Fists of Fury", ret => Me.CurrentEnergy <= 60 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && !Me.HasAura("Combo Breaker: Blackout Kick") && !Me.IsMoving && Me.HasAura("Tiger Power") && Me.CurrentChi >= 3),
 					
-					new Decorator( ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= 4 && MonkSettings.UseAOE,
+					new Decorator( ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= SingularSettings.Instance.AOENumber,
 					 new PrioritySelector
 					 (
 						Spell.Cast("Expel Harm", ret => Me.CurrentEnergy >= 40 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
