@@ -58,6 +58,7 @@ namespace Singular.ClassSpecific.Monk
 
                     //drop healing sphere
                     Spell.CastOnGround("Healing Sphere", ret => Me.Location, ret => Me.CurrentEnergy >= 40 && Me.HealthPercent <= 50 && MonkSettings.MoveToSpheres),
+                    //Spell.CastOnGround("Healing Sphere", ret => Unit.NearbyFriendlyPlayers.FirstOrDefault(u => u.Guid != Me.Guid && u.HealthPercent <= 50).Location, ret => Me.CurrentEnergy >= 40 && MonkSettings.MoveToSpheres),
 
 					//dps rotation
 					Spell.Cast("Touch of Death", ret => Me.HasAura("Death Note") || Me.CurrentTarget.IsPlayer && Me.CurrentTarget.HealthPercent < 10),
