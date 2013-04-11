@@ -62,7 +62,7 @@ namespace Singular.ClassSpecific.Warrior
 
 				    //Spam Execute on Execute phase
                     Spell.Cast("Execute", ret => WithinExecuteRange),
-                    Spell.Cast("Dragon Roar"),
+                    Spell.Cast("Dragon Roar", ret => Me.CurrentTarget.IsWithinMeleeRange),
 				    //Handle AOE rotation when more than 1 target nearby within 8 yard
                     new Decorator
 				    (

@@ -30,6 +30,7 @@ namespace Singular.ClassSpecific.Monk
 			              Safers.EnsureTarget(),
 			              Movement.CreateMoveToLosBehavior(),
 			              Movement.CreateFaceTargetBehavior(),
+                          BaseRotation(),
 			              Movement.CreateMoveToMeleeBehavior(true)
                           )
 		              ),
@@ -65,24 +66,25 @@ namespace Singular.ClassSpecific.Monk
 					Spell.Cast("Expel Harm", ret => Me.CurrentEnergy >= 40 && Me.HealthPercent <= 85),
 					Spell.Cast("Chi Wave", ret => !Me.CurrentTarget.IsPlayer || Me.CurrentTarget.IsPlayer && Me.HealthPercent <= 75),
 					//Spell.Cast("Dampen Harm"),
-					Spell.Cast("Spinning Fire Blossom", ret => !Me.CurrentTarget.IsBoss && Me.CurrentTarget.Distance > 10 && Me.IsSafelyFacing(Me.CurrentTarget)),
+					Spell.Cast("Spinning Fire Blossom", ret => !Me.CurrentTarget.IsBoss && Me.CurrentTarget.Distance > 15 && Me.IsSafelyFacing(Me.CurrentTarget)),
 					Spell.Cast("Disable", ret => Me.CurrentTarget.IsPlayer && !Me.CurrentTarget.HasMyAura("Disable")),
 					Spell.Cast("Leg Sweep", ret => Me.CurrentTarget.IsWithinMeleeRange && MonkSettings.AOEStun),
 					Spell.Cast("Ring of Peace", ret => Me.CurrentTarget.IsPlayer && Me.CurrentTarget.IsWithinMeleeRange),
-					Spell.Cast("Grapple Weapon", ret => Me.CurrentEnergy >= 20 && Me.CurrentTarget.IsPlayer && !Me.HasAura("Ring of Peace")),
+					Spell.Cast("Grapple Weapon", ret => Me.CurrentEnergy >= 20 && Me.CurrentTarget.IsPlayer),
 					Spell.Cast("Tiger Palm", ret => Me.CurrentChi > 0 && (!Me.HasAura("Tiger Power") || Me.GetAuraTimeLeft("Tiger Power", true).TotalSeconds < 4) || Me.HasAura("Combo Breaker: Tiger Palm")),						
 					Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
-					Spell.Cast("Fists of Fury", ret => Me.CurrentEnergy <= 60 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && !Me.HasAura("Combo Breaker: Blackout Kick") && !Me.IsMoving && Me.HasAura("Tiger Power") && Me.CurrentChi >= 3),
+                    Spell.Cast("Fists of Fury", ret => Me.CurrentEnergy <= 60 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 1 && !Me.HasAura("Combo Breaker: Blackout Kick") && !Me.IsMoving && Me.HasAura("Tiger Power") && Me.CurrentChi >= 3 && Me.CurrentTarget.HasAura("Rising Sun Kick")),
 					
 					new Decorator( ret => !Spell.IsGlobalCooldown() && Unit.NearbyUnfriendlyUnits.Count(u => u.Distance <= 8) >= SingularSettings.Instance.AOENumber,
 					 new PrioritySelector
 					 (
+                        Spell.Cast("Rising Sun Kick", ret => Me.CurrentChi >= 2 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
 						Spell.Cast("Expel Harm", ret => Me.CurrentEnergy >= 40 && Spell.GetSpellCooldown("Rising Sun Kick").Seconds == 0),
 						Spell.Cast("Spinning Crane Kick", ret => Me.CurrentEnergy >= 40)
 						)
 					 ),
 
-					Spell.Cast("Blackout Kick", ret => Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && Me.CurrentChi >= 2 && Me.HasAura("Tiger Power") || Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 2 && Me.HasAura("Combo Breaker: Blackout Kick") && Me.HasAura("Tiger Power")),
+					Spell.Cast("Blackout Kick", ret => Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 1 && Me.CurrentChi >= 2 && Me.HasAura("Tiger Power") || Spell.GetSpellCooldown("Rising Sun Kick").Seconds >= 1 && Me.HasAura("Combo Breaker: Blackout Kick") && Me.HasAura("Tiger Power")),
 					
 					Spell.Cast("Jab", ret => Me.CurrentChi <= 2 && Me.CurrentEnergy >= 40)
 					)
