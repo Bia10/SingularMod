@@ -93,6 +93,13 @@ namespace Singular.Settings
         [Description("Number of target need to AOE.")]
         public int AOENumber { get; set; }
 
+        [Setting]
+        [DefaultValue(true)]
+        [Category("General")]
+        [DisplayName("Use CDs")]
+        [Description("Use CDs on boss")]
+        public bool UseCDs { get; set; }
+
 		[Setting]
 		[DefaultValue(false)]
 		[Category("Movement")]

@@ -51,8 +51,8 @@ namespace Singular.ClassSpecific.Monk
 					Spell.Cast("Spear Hand Strike", ret => Unit.NearbyUnFriendlyPlayers.FirstOrDefault(u => u.IsWithinMeleeRange && Me.IsFacing(u) && u.IsCastingHealingSpell)),
 
 					//CD & defense
-					Spell.Cast("Invoke Xuen, the White Tiger", ret => Me.CurrentTarget.IsPlayer || Me.CurrentTarget.IsBoss),
-					Spell.Cast("Tigereye Brew", ret => Me.HasAura("Tigereye Brew", 10) || Me.HealthPercent <= 40 && Me.HasAura("Tigereye Brew") && Me.HasAura("Healing Elixirs")),
+                    Spell.Cast("Invoke Xuen, the White Tiger", ret => Me.CurrentTarget.IsPlayer || Me.CurrentTarget.IsBoss && SingularSettings.Instance.UseCDs),
+                    Spell.Cast("Tigereye Brew", ret => Me.HasAura("Tigereye Brew", 10) && SingularSettings.Instance.UseCDs || Me.HealthPercent <= 40 && Me.HasAura("Tigereye Brew") && Me.HasAura("Healing Elixirs")),
 					Spell.Cast("Energizing Brew", ret => Me.CurrentEnergy < 40),
 					Spell.Cast("Fortifying Brew", ret => Me.HealthPercent <= 35),
 					Spell.Cast("Touch of Karma", ret => !Me.CurrentTarget.IsBoss && Me.HealthPercent <= 75 || Me.CurrentTarget.IsBoss && Me.HealthPercent <= 50),

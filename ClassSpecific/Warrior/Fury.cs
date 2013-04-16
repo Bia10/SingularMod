@@ -55,10 +55,10 @@ namespace Singular.ClassSpecific.Warrior
 				    //Handle selfbuff
                     Spell.BuffSelf("Berserker Rage", ret => !IsEnraged && Me.CurrentTarget.IsWithinMeleeRange),
                     Spell.BuffSelf("Bloodbath"),
-				    Spell.BuffSelf("Skull Banner", ret => WithinExecuteRange && Unit.IsBoss(Me.CurrentTarget)),
+                    Spell.BuffSelf("Skull Banner", ret => SingularSettings.Instance.UseCDs && WithinExecuteRange && Unit.IsBoss(Me.CurrentTarget)),
                     //Spell.BuffSelf("Deadly Calm", ret => Me.RagePercent >= 40 && TargetSmashed && !WithinExecuteRange),
 				    //Only use Recklessness on Execute phase
-				    Spell.BuffSelf("Recklessness", ret => WithinExecuteRange && Unit.IsBoss(Me.CurrentTarget) || WithinExecuteRange && Unit.IsBoss(Me.CurrentTarget)),
+                    Spell.BuffSelf("Recklessness", ret => SingularSettings.Instance.UseCDs && WithinExecuteRange && Unit.IsBoss(Me.CurrentTarget)),
 
 				    //Spam Execute on Execute phase
                     Spell.Cast("Execute", ret => WithinExecuteRange),
