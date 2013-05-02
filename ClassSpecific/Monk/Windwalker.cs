@@ -53,6 +53,7 @@ namespace Singular.ClassSpecific.Monk
 						//CD & defense
                     Spell.Cast("Invoke Xuen, the White Tiger", ret => Me.CurrentTarget.IsBoss),
                     Spell.Cast("Tigereye Brew", ret => Me.HasAura("Tigereye Brew", MonkSettings.TigerEyeStacks)),
+					Spell.Cast("Tigereye Brew", ret => Me.GetAuraByName("Re-Origination").TimeLeft.TotalSeconds < 3),
 					Spell.Cast("Energizing Brew", ret => Me.CurrentEnergy < 30),
 					Spell.Cast("Fortifying Brew", ret => Me.HealthPercent <= 35),
 					Spell.Cast("Touch of Karma", ret => Me.HealthPercent <= 45),
