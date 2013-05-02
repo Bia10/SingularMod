@@ -64,13 +64,6 @@ namespace Singular.Settings
         [Setting]
         [Styx.Helpers.DefaultValue(true)]
         [Category("Common")]
-        [DisplayName("Use AOE")]
-        [Description("True / False if you would like to AOE")]
-        public bool UseAOE { get; set; }
-
-        [Setting]
-        [Styx.Helpers.DefaultValue(true)]
-        [Category("Common")]
         [DisplayName("AOE Stun")]
         public bool AOEStun { get; set; }
 
@@ -79,6 +72,18 @@ namespace Singular.Settings
 		[Category("Common")]
 		[DisplayName("Paralysis")]
 		public bool Paralysis { get; set; }
+
+		[Setting]
+		[Styx.Helpers.DefaultValue(20)]
+		[Category("Common")]
+		[DisplayName("TigerEyeStacks")]
+		public int TigerEyeStacks { get; set; }
+
+		[Setting]
+		[Styx.Helpers.DefaultValue(false)]
+		[Category("Common")]
+		[DisplayName("PVP")]
+		public bool PVP { get; set; }
 
         #endregion
 
